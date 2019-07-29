@@ -25,3 +25,10 @@ class RoomDetailsView(APIView):
         serializer = RoomSerializer(room)
 
         return Response(serializer.data)
+
+    # def post(self, request):
+    #     serialize = RoomSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
