@@ -9,13 +9,9 @@ autopep8 = "*"
 
 [packages]
 django = "*"
-<<<<<<< HEAD
 djangorestframework = "*"
-=======
 request = "*"
 requests = "*"
-json = "*"
->>>>>>> master
 
 [requires]
 python_version = "3.7"
