@@ -2,6 +2,7 @@ import requests
 import json
 import time
 import os
+import sys
 
 class Queue():
     def __init__(self):
@@ -16,12 +17,18 @@ class Queue():
     def size(self):
         return len(self.queue)
 
-content = ""
-with open("key.txt", "r") as infile:
-    content = infile.readlines()
+my_key = ""
+if os.path.isfile("key.txt"):
+    with open("key.txt", "r") as infile:
+        my_key = infile.readlines()[0].strip()
 
-content = [x.strip() for x in content]
-my_key = content[0]
+if len(sys.argv) >= 2:
+    my_key = sys.argv[1].strip()
+
+if len(my_key) == 0:
+    print("No key provided!")
+    exit()
+
 url = "https://lambda-treasure-hunt.herokuapp.com/api/adv"
 headers = {"content-type": "application/json", "Authorization": f"Token {my_key}"}
 cooldown = 0
@@ -60,8 +67,10 @@ def init(key):
 
 
 def move(key, direction, next_room):
-    r = requests.post(f"{ url }/move", json={"direction": direction, "next_room_id": next_room}, headers=headers)
+    r = requests.post(f"{ url }/move", json={"direction": direction, "next_room_id": str(next_room)}, headers=headers)
     return r
+
+# breakpoint()
 
 
 # load roomgraph from json if it exists
@@ -80,7 +89,7 @@ def load_roomgraph(filename=None):
 # reshape move response
 def shape_move_response(response, roomGraph):
     result = {
-        "exits": {d: None for d in response["exits"]},
+        "exits": {d: None for d in response["exits"] },
         "room_id": f"{response['room_id']}",
         "title": response["title"],
         "description": response["description"],
@@ -171,8 +180,13 @@ while True:
     # we might use these as the first objective
     unelevated_rooms = set()
     for k in roomGraph:
-        if "elevation" not in roomGraph[k]:
-            unelevated_rooms.add(k)
+        if roomGraph[f"{k}"] is None:
+            # might have to do something here
+            print(f"roomGraph[{k}] was None!")
+            continue
+
+        if "elevation" not in roomGraph[f"{k}"]:
+            unelevated_rooms.add(f"{k}")
     print(f"Unelevated Rooms Count: {len( unelevated_rooms )}")
     # if iteration == 1:
     #     breakpoint()
@@ -188,7 +202,7 @@ while True:
     # q.enqueue(list(player["current_room"]["exits"].keys))
     for k,v in player["current_room"]["exits"].items():
         # queue an initial path list with this first move
-        q.enqueue([(k,v)])
+        q.enqueue([(f"{k}",v)])
 
     # while our queue length is > 0, seek first room without elevation
     while q.size() > 0:
@@ -198,7 +212,7 @@ while True:
 
         # the tuple to inspect will be the last one
         t = path[-1]
-        room_id = t[1]
+        room_id = f"{t[1]}"
         room_direction = t[0]
 
         if len(visited) == len(roomGraph):
@@ -215,6 +229,7 @@ while True:
             # we've found the next room to go to
             # BFS is over
             unelevated = None
+            # try:
             if "elevation" not in roomGraph[room_id]:
                 # BFS over
                 unelevated = room_id
@@ -226,6 +241,8 @@ while True:
                     path_copy = list(path)
                     path_copy.append((k,v))
                     q.enqueue(path_copy)
+            # except:
+            #     breakpoint()
 
             if unelevated is not None:
                 # we need to go here
@@ -241,6 +258,7 @@ while True:
                         this_response = move(my_key, tt[0], tt[1])
                         if this_response.status_code is not 200:
                             if this_response.status_code == 500:
+                                breakpoint()
                                 print("500 server status! in move loop")
                                 exit()
                             cooldown = this_response.json()["cooldown"]
@@ -252,15 +270,18 @@ while True:
                         else:
                             # break outta request loop
                             print(f"Good response!, waiting {this_response.json()['cooldown']}")
+                            print(json.dumps(this_response.json(), indent=4, sort_keys=True))
                             time.sleep(this_response.json()["cooldown"])
                             cooldown = 0
                             # breakpoint()
                             break
 
+
                     player["current_room"] = shape_move_response(this_response.json(), roomGraph)
+                    roomGraph = load_roomgraph()
                     roomGraph[f"{player['current_room']['room_id']}"] = player["current_room"]
                     save_roomgraph(roomGraph)
-                    print("====EXITING THIS TRAVERSAL====")
+                print("====EXITING THIS TRAVERSAL====")
                 # break out of traversal loop, we've entered a new unelevated room
                 break
 
