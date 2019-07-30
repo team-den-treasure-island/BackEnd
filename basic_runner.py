@@ -38,7 +38,7 @@ url = "https://lambda-treasure-hunt.herokuapp.com/api/adv"
 headers = {"content-type": "application/json", "Authorization": f"Token {my_key}"}
 cooldown = 0
 encumbered = False
-max_weight = True
+max_weight = False
 
 # init
 # response:
