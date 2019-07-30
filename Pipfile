@@ -9,10 +9,18 @@ pep8 = "*"
 
 [packages]
 django = "*"
+<<<<<<< Updated upstream
 python-dotenv = "*"
 request = "*"
 requests = "*"
 djangorestframework = "*"
+=======
+djangorestframework = "*"
+request = "*"
+requests = "*"
+json = "*"
+python-dotenv = "*"
+>>>>>>> Stashed changes
 
 [requires]
 python_version = "3.7"
