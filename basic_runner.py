@@ -365,7 +365,7 @@ while True:
             unelevated = None
             # try:
             print(room_id)
-            if room_id is None or "elevation" not in roomGraph[room_id]:
+            if room_id is "None" or "elevation" not in roomGraph[room_id]:
                 print(f"Next Room: ({room_direction},{room_id})")
                 # BFS over
                 unelevated = room_id
