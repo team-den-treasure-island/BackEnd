@@ -71,8 +71,17 @@ player["max_weight"] = False
 # {"cooldown": 5.447648, "errors": ["Cooldown Violation: +5s CD"]}
 
 
+def change_name(key, name):
+    r = requests.post(
+        f"{ url }/change_name", json={"name": name, "confirm": "aye"}, headers=headers
+    )
+    return r
+
+
 def pretty_print(ugly_json):
     print(json.dumps(ugly_json, indent=4, sort_keys=True))
+
+
 
 
 def init(key):
@@ -84,6 +93,30 @@ def move(key, direction, next_room):
     r = requests.post(
         f"{ url }/move",
         json={"direction": direction, "next_room_id": str(next_room)},
+        headers=headers,
+    )
+    return r
+
+def pray(key):
+    r = requests.post(
+        f"{ url }/pray",
+        data={},
+        headers=headers,
+    )
+    return r
+
+def flight(key, direction):
+    r = requests.post(
+        f"{ url }/pray",
+        json={"direction": direction},
+        headers=headers,
+    )
+    return r
+
+def dash(key, direction, num_rooms, next_room_ids):
+    r = requests.post(
+        f"{ url }/pray",
+        json={"direction": direction, "num_rooms": num_rooms, "next_room_ids": ",".join(next_room_ids)},
         headers=headers,
     )
     return r
@@ -105,6 +138,7 @@ def get_status(key):
     r = requests.post(f"{ url }/status", data={}, headers=headers)
     return r
 
+# breakpoint()
 
 # breakpoint()
 
@@ -277,7 +311,9 @@ def sell_everything(key, player, roomGraph):
     print("Done.")
 
 
-def traverse_path(key, player, target_room_id, roomGraph):
+def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
+    if ignore_weight is None:
+        ignore_weight = False
     while True:
         current_id = player["current_room"]["room_id"]
         shortest_route = find_shortest_path(
@@ -304,7 +340,7 @@ def traverse_path(key, player, target_room_id, roomGraph):
                     pu_response = pickup(my_key, "small treasure")
                     # print("Pickup Response:")
                     this_json = pu_response.json()
-                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                    if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
                         player["max_weight"] = True
                         break
                     else:
@@ -317,7 +353,7 @@ def traverse_path(key, player, target_room_id, roomGraph):
                     pu_response = pickup(my_key, "tiny treasure")
                     # print("Pickup Response:")
                     this_json = pu_response.json()
-                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                    if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
                         player["max_weight"] = True
                         break
                     else:
@@ -377,6 +413,9 @@ player["current_room"] = shape_move_response(rjson, roomGraph)
 
 roomGraph[f"{rjson['room_id']}"] = player["current_room"]
 save_roomgraph(roomGraph)
+# traverse_path(my_key, player, "457", roomGraph, True)
+# breakpoint()
+# breakpoint()
 
 # main traversal loop
 # 500 rooms
