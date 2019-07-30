@@ -22,13 +22,34 @@ class RoomDetailsView(APIView):
 
     def get(self, request, pk, format=None):
         room = self.get_object(pk)
-        serializer = RoomSerializer(room)
+        serialize = RoomSerializer(room)
 
-        return Response(serializer.data)
+        return Response(serialize.data)
 
-    # def post(self, request):
-    #     serialize = RoomSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, format=None):
+        serialize = RoomSerializer(data=request.data)
+        if serialize.is_valid():
+            serialize.save()
+            return Response(serialize.data, status=status.HTTP_201_CREATED)
+        return Response(serialize.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk, format=None):
+        room = self.get_object(pk)
+        serialize = RoomSerializer(room, data=request.data)
+        if serialize.is_valid():
+            serialize.save()
+            return Response(serialize.data)
+        return Response(serialize.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        room = self.get_object(pk)
+        room.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def patch(self, request, pk, format=None):
+        room = self.get_object(pk)
+        serialize = RoomSerializer(room, data=request.data, partial=True)
+        if serialize.is_valid():
+            serialize.save()
+            return Response(serialize.data)
+        return Response(serialize.errors, status=status.HTTP_400_BAD_REQUEST)
