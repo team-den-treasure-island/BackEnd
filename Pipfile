@@ -4,18 +4,15 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pep8 = "*"
 autopep8 = "*"
+pep8 = "*"
 
 [packages]
 django = "*"
-<<<<<<< HEAD
-djangorestframework = "*"
-=======
+python-dotenv = "*"
 request = "*"
 requests = "*"
-json = "*"
->>>>>>> master
+djangorestframework = "*"
 
 [requires]
 python_version = "3.7"
