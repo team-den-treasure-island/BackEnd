@@ -333,6 +333,18 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
             print("Good response, Treasure Check")
             if "items" in this_json and not player["max_weight"]:
                 pretty_print(this_json)
+                while "shiny treasure" in this_json["items"]:
+                    print(f"Shiny Treasure found! {this_json['items']}")
+                    print("sleeping cooldown")
+                    time.sleep(this_json["cooldown"])
+                    pu_response = pickup(my_key, "shiny treasure")
+                    # print("Pickup Response:")
+                    this_json = pu_response.json()
+                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                        player["max_weight"] = True
+                        break
+                    else:
+                        player["max_weight"] = False
                 while "small treasure" in this_json["items"]:
                     print(f"Small Treasure found! {this_json['items']}")
                     print("sleeping cooldown")
@@ -543,6 +555,19 @@ while True:
                             # check for treasure
                             print("Good response, Treasure Check")
                             if "items" in this_json and not player["max_weight"]:
+                                while "shiny treasure" in this_json["items"]:
+                                    print(f"Shiny Treasure found! {this_json['items']}")
+                                    print("sleeping cooldown")
+                                    time.sleep(this_json["cooldown"])
+                                    pu_response = pickup(my_key, "shiny treasure")
+                                    # print("Pickup Response:")
+                                    this_json = pu_response.json()
+                                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                                        player["max_weight"] = True
+                                        break
+                                    else:
+                                        player["max_weight"] = False
+
                                 while "small treasure" in this_json["items"]:
                                     print(f"Small Treasure found! {this_json['items']}")
                                     print("sleeping cooldown")

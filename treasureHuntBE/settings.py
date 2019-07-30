@@ -13,8 +13,8 @@ import os
 from decouple import config
 from unipath import Path
 from dj_database_url import parse as db_url
+import django_heroku
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = Path(__file__).parent
@@ -24,17 +24,26 @@ BASE_DIR = Path(__file__).parent
 
 # SECRET_KEY
 # in .env file and settings.py
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 # ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'thawing-dawn-36205.herokuapp.com']
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'rocky-river-63913.herokuapp.com']
 
+# allow read/write permissions for logged in users, only read for anonymous ones
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
+    ]
+}
 
 # Application definition
 
 INSTALLED_APPS = [
+    # "graphene_django",
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -48,6 +57,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -55,7 +65,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 ROOT_URLCONF = "treasureHuntBE.urls"
+
 
 TEMPLATES = [
     {
@@ -125,7 +138,12 @@ STATIC_URL = "/static/"
 
 # HEROKU STUFF
 # https://github.com/heroku/django-heroku
-# Configure Django App for Heroku.
-import django_heroku
+# Graphene Settings
+GRAPHENE = {
+    # Tell graphene how to access schema variables
+    # "inside notes, schema.py, variable schema"
+    "SCHEMA": "treasureHunt.schema.schema"
+}
 
 django_heroku.settings(locals())
+# Configure Django App for Heroku.

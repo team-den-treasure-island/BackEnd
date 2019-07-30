@@ -4,18 +4,22 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pep8 = "*"
-autopep8 = "*"
 
 [packages]
 django = "*"
-djangorestframework = "*"
-request = "*"
-requests = "*"
-django-heroku = "*"
-gunicorn = "*"
-unipath = "*"
 python-decouple = "*"
+pathlib = "*"
+dj-database-url = "*"
+unipath = "*"
+djangorestframework = "*"
+django-cors-headers = "*"
+graphene-django = "*"
+gunicorn = "*"
+django-heroku = "*"
+postgres = "*"
+pytz = "*"
+whitenoise = "*"
 
 [requires]
 python_version = "3.7"
+
