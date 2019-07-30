@@ -23,7 +23,7 @@ class Room(models.Model):
     coord_x = models.SmallIntegerField(blank=True)
     coord_y = models.SmallIntegerField(blank=True)
     elevation = models.IntegerField(blank=True)
-    terrain = models.CharField(max_length=255)
+    terrain = models.CharField(max_length=255, blank=True)
     n_to = models.IntegerField(default=0)
     s_to = models.IntegerField(default=0)
     e_to = models.IntegerField(default=0)
