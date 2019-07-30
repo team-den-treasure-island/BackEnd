@@ -12,9 +12,10 @@ django = "*"
 djangorestframework = "*"
 request = "*"
 requests = "*"
-python-dotenv = "*"
 django-heroku = "*"
 gunicorn = "*"
+unipath = "*"
+python-decouple = "*"
 
 [requires]
 python_version = "3.7"
