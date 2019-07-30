@@ -4,18 +4,23 @@ import time
 import os
 import sys
 
-class Queue():
+
+class Queue:
     def __init__(self):
         self.queue = []
+
     def enqueue(self, value):
         self.queue.append(value)
+
     def dequeue(self):
         if self.size() > 0:
             return self.queue.pop(0)
         else:
             return None
+
     def size(self):
         return len(self.queue)
+
 
 my_key = ""
 if os.path.isfile("key.txt"):
@@ -32,6 +37,8 @@ if len(my_key) == 0:
 url = "https://lambda-treasure-hunt.herokuapp.com/api/adv"
 headers = {"content-type": "application/json", "Authorization": f"Token {my_key}"}
 cooldown = 0
+encumbered = False
+max_weight = True
 
 # init
 # response:
@@ -61,14 +68,40 @@ cooldown = 0
 # {"cooldown": 5.447648, "errors": ["Cooldown Violation: +5s CD"]}
 
 
+def pretty_print(ugly_json):
+    print(json.dumps(ugly_json, indent=4, sort_keys=True))
+
+
 def init(key):
     r = requests.get(f"{ url }/init", headers=headers)
     return r
 
 
 def move(key, direction, next_room):
-    r = requests.post(f"{ url }/move", json={"direction": direction, "next_room_id": str(next_room)}, headers=headers)
+    r = requests.post(
+        f"{ url }/move",
+        json={"direction": direction, "next_room_id": str(next_room)},
+        headers=headers,
+    )
     return r
+
+
+def sell(key, name):
+    r = requests.post(
+        f"{ url }/sell", json={"name": name, "confirm": "yes"}, headers=headers
+    )
+    return r
+
+
+def pickup(key, name):
+    r = requests.post(f"{ url }/take", json={"name": name}, headers=headers)
+    return r
+
+
+def get_status(key):
+    r = requests.post(f"{ url }/status", data={}, headers=headers)
+    return r
+
 
 # breakpoint()
 
@@ -89,7 +122,7 @@ def load_roomgraph(filename=None):
 # reshape move response
 def shape_move_response(response, roomGraph):
     result = {
-        "exits": {d: None for d in response["exits"] },
+        "exits": {d: None for d in response["exits"]},
         "room_id": f"{response['room_id']}",
         "title": response["title"],
         "description": response["description"],
@@ -132,12 +165,111 @@ def load_old_data(filename=None):
     return roomGraph
 
 
+# bfs to find the shortest route
+def find_shortest_path(start_id, end_id, roomGraph, explore_nones=None):
+    if explore_nones is None:
+        explore_nones = True
+    # we're already there!
+    if start_id == end_id:
+        return []
+
+    current_room = roomGraph[start_id]
+    while True:
+        visited = set()
+        # create the queue
+        q = Queue()
+
+        # add our current neighbors
+        for k, v in current_room["exits"].items():
+            # queue an initial path list with this first move
+            q.enqueue([(f"{k}", v)])
+
+        # while our queue length is > 0, search until we find a room_id match
+        while q.size() > 0:
+            path = q.dequeue()
+            t = path[-1]
+            room_id = f"{t[1]}"
+            room_direction = t[0]
+            if t[1] is None:
+                continue
+
+            # if we found the path, return it
+            if room_id == end_id:
+                return path
+
+            if len(visited) == len(roomGraph):
+                print("Ran out of rooms trying to find path!")
+                exit()
+
+            if room_id not in visited:
+                # add it
+                visited.add(room_id)
+                # queue up neighbors
+                for k, v in roomGraph[room_id]["exits"].items():
+                    path_copy = list(path)
+                    path_copy.append((k, v))
+                    q.enqueue(path_copy)
+
+
+# Move to the shop
+def go_sell(key, player, roomGraph):
+    print("Going to sell.")
+    while True:
+        current_id = player["current_room"]["room_id"]
+        shortest_route = find_shortest_path(current_id, "1", roomGraph)
+        if len(shortest_route) == 0:
+            # we're already there
+            break
+        r = None
+        print(f"Shortest Route: {shortest_route}")
+        while r is None or len(r.json()["errors"]) > 0:
+            print(f"Moving to {shortest_route[0][0]}, {shortest_route[0][1]}")
+            r = move(my_key, shortest_route[0][0], shortest_route[0][1])
+            rjson = r.json()
+            cooldown = rjson["cooldown"]
+            print(f"Sleeping {cooldown}")
+            time.sleep(cooldown)
+
+        player["current_room"] = shape_move_response(r.json(), roomGraph)
+        roomGraph = load_roomgraph()
+        roomGraph[f"{player['current_room']['room_id']}"] = player["current_room"]
+        save_roomgraph(roomGraph)
+
+        if player["current_room"]["room_id"] == "1":
+            break
+    sell_everything(key, player, roomGraph)
+
+
+def sell_everything(key, player, roomGraph):
+    print("Selling Everything")
+    time.sleep(cooldown)
+    r = None
+    items = []
+    while r is None or len(r.json()["errors"]) > 0:
+        print("Getting Status:")
+        r = get_status(key)
+        rjson = r.json()
+        pretty_print(rjson)
+        print(f"Sleeping {rjson['cooldown']}")
+        time.sleep(rjson["cooldown"])
+    items = r.json()["inventory"]
+    for i in range(len(items)):
+        print("Selling: f{items[i]}")
+        r = sell(key, items[i])
+        rjson = r.json()
+        pretty_print(rjson)
+        print(f"Sleeping {rjson['cooldown']}")
+        time.sleep(rjson["cooldown"])
+    print("Done.")
+
+
 roomGraph = load_old_data()
 # exit()
 
 
 ####### PROGRAM START ########
 roomGraph = load_roomgraph()
+# breakpoint()
 player = {}
 direction_opposites = {"n": "s", "e": "w", "s": "n", "w": "e"}
 initial_exits = {}
@@ -172,6 +304,8 @@ save_roomgraph(roomGraph)
 iteration = 0
 # elevation hunter
 while True:
+    if max_weight:
+        go_sell(my_key, player, roomGraph)
     print("**** BEGIN ELEVATION TRAVERSAL (Press Enter)")
     # input()
     print(json.dumps(player["current_room"], indent=4, sort_keys=True))
@@ -200,9 +334,9 @@ while True:
 
     # start the queue with our current neighbors
     # q.enqueue(list(player["current_room"]["exits"].keys))
-    for k,v in player["current_room"]["exits"].items():
+    for k, v in player["current_room"]["exits"].items():
         # queue an initial path list with this first move
-        q.enqueue([(f"{k}",v)])
+        q.enqueue([(f"{k}", v)])
 
     # while our queue length is > 0, seek first room without elevation
     while q.size() > 0:
@@ -230,23 +364,26 @@ while True:
             # BFS is over
             unelevated = None
             # try:
-            if "elevation" not in roomGraph[room_id]:
+            print(room_id)
+            if room_id is None or "elevation" not in roomGraph[room_id]:
+                print(f"Next Room: ({room_direction},{room_id})")
                 # BFS over
                 unelevated = room_id
             else:
                 # BFS not over, keep queuing
                 # queue all this room's neighbors
-                path_copy = list(path)
-                for k,v in roomGraph[room_id]["exits"].items():
+                for k, v in roomGraph[room_id]["exits"].items():
                     path_copy = list(path)
-                    path_copy.append((k,v))
+                    path_copy.append((k, v))
                     q.enqueue(path_copy)
             # except:
             #     breakpoint()
 
             if unelevated is not None:
                 # we need to go here
-                print(f"***** Next Room Objective:  ({room_direction}, {unelevated}) *****")
+                print(
+                    f"***** Next Room Objective:  ({room_direction}, {unelevated}) *****"
+                )
 
                 # append the tuple from above
                 for tt in path:
@@ -268,22 +405,45 @@ while True:
                             # breakpoint()
                             continue
                         else:
+                            this_json = this_response.json()
                             # we moved successfully
                             # check for treasure
-                            print(f"Good response!, waiting {this_response.json()['cooldown']}")
-                            print(json.dumps(this_response.json(), indent=4, sort_keys=True))
-                            time.sleep(this_response.json()["cooldown"])
+                            print("Good response, Treasure Check")
+                            if "items" in this_json and not max_weight:
+                                while "tiny treasure" in this_json["items"]:
+                                    print(f"Treasure found! {this_json['items']}")
+                                    print("sleeping cooldown")
+                                    time.sleep(this_json["cooldown"])
+                                    pu_response = pickup(my_key, "tiny treasure")
+                                    # print("Pickup Response:")
+                                    this_json = pu_response.json()
+                                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                                        max_weight = True
+                                        break
+                                    else:
+                                        max_weight = False
+                                    # breakpoint()
+
+                            print(json.dumps(this_json, indent=4, sort_keys=True))
+                            print(f"Waiting {this_json['cooldown']}")
+                            time.sleep(this_json["cooldown"] + 0.5)
                             cooldown = 0
                             # break outta request loop
                             break
 
-
-                    player["current_room"] = shape_move_response(this_response.json(), roomGraph)
+                    if (
+                        "Heavily Encumbered: +100% CD"
+                        in this_response.json()["messages"]
+                    ):
+                        encumbered = True
+                    player["current_room"] = shape_move_response(
+                        this_response.json(), roomGraph
+                    )
                     roomGraph = load_roomgraph()
-                    roomGraph[f"{player['current_room']['room_id']}"] = player["current_room"]
+                    roomGraph[f"{player['current_room']['room_id']}"] = player[
+                        "current_room"
+                    ]
                     save_roomgraph(roomGraph)
                 print("====EXITING THIS TRAVERSAL====")
                 # break out of traversal loop, we've entered a new unelevated room
                 break
-
-
