@@ -268,12 +268,13 @@ while True:
                             # breakpoint()
                             continue
                         else:
-                            # break outta request loop
+                            # we moved successfully
+                            # check for treasure
                             print(f"Good response!, waiting {this_response.json()['cooldown']}")
                             print(json.dumps(this_response.json(), indent=4, sort_keys=True))
                             time.sleep(this_response.json()["cooldown"])
                             cooldown = 0
-                            # breakpoint()
+                            # break outta request loop
                             break
 
 
