@@ -18,7 +18,7 @@ class RoomSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Room
-        fields = ("title", "content")
+        fields = ("__all__")
 
 
 # has access to request directly
@@ -27,14 +27,15 @@ class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.none() # empty dictionary
 
     def get_queryset(self):
-        user = self.request.user
+        # user = self.request.user
 
-        # built in auth apparently has an is_anonymous
-        if user.is_anonymous:
-            # return none if they're anonymous
-            return Room.objects.none()
-        else:
-            return Room.objects.filter(user=user)
+        return Room.objects.all()
+        # # built in auth apparently has an is_anonymous
+        # if user.is_anonymous:
+        #     # return none if they're anonymous
+        #     return Room.objects.none()
+        # else:
+        #     return Room.objects.filter(user=user)
 
 class PlayerSerializer(serializers.HyperlinkedModelSerializer):
     def create(self, validated_data):
@@ -49,7 +50,7 @@ class PlayerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Player
-        fields = ("title", "content")
+        fields = ("__all__")
 
 
 # has access to request directly
@@ -58,12 +59,13 @@ class PlayerViewSet(viewsets.ModelViewSet):
     queryset = Player.objects.none() # empty dictionary
 
     def get_queryset(self):
-        user = self.request.user
+        # user = self.request.user
+        return Player.objects.all()
 
         # built in auth apparently has an is_anonymous
-        if user.is_anonymous:
-            # return none if they're anonymous
-            return Player.objects.none()
-        else:
-            return Player.objects.filter(user=user)
+        # if user.is_anonymous:
+        #     # return none if they're anonymous
+        #     return Player.objects.none()
+        # else:
+        #     return Player.objects.filter(user=user)
 
