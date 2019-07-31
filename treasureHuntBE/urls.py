@@ -32,3 +32,6 @@ urlpatterns = [
     # add graphQL route with graphiql interface enabled
     path("graphql/", GraphQLView.as_view(graphiql=True)),
 ]
+
+  # if we need custom routes, we can add this back
+  # path('', include('treasureHunt.urls')),
