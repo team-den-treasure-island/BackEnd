@@ -436,6 +436,8 @@ iteration = 0
 # elevation hunter, then random
 while True:
     if player["max_weight"]:
+        print("top wuh oh")
+        breakpoint()
         go_sell(my_key, player, roomGraph)
     print("**** BEGIN ELEVATION TRAVERSAL (Press Enter)")
     # input()
@@ -461,6 +463,8 @@ while True:
             # move to 1 away from shop
             traverse_path(my_key, player, target_room, roomGraph)
             # move to shope and sell everything
+            print("wuh oh")
+            breakpoint()
             go_sell(my_key, player, roomGraph)
             player["encumbered"] = False
         else:
