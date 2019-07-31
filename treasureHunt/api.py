@@ -6,6 +6,8 @@ from .models import Room, Player
 
 
 class RoomSerializer(serializers.HyperlinkedModelSerializer):
+    # lookup_field = 'room_id'
+
     def create(self, validated_data):
         # import pdb
         #
@@ -18,13 +20,16 @@ class RoomSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Room
-        fields = ("__all__")
+        lookup_field = "room_id"
+        fields = "__all__"
+        extra_kwargs = {"url": {"lookup_field": "room_id"}}
 
 
 # has access to request directly
 class RoomViewSet(viewsets.ModelViewSet):
     serializer_class = RoomSerializer
-    queryset = Room.objects.none() # empty dictionary
+    queryset = Room.objects.none()  # empty dictionary
+    lookup_field = "room_id"
 
     def get_queryset(self):
         # user = self.request.user
@@ -36,6 +41,7 @@ class RoomViewSet(viewsets.ModelViewSet):
         #     return Room.objects.none()
         # else:
         #     return Room.objects.filter(user=user)
+
 
 class PlayerSerializer(serializers.HyperlinkedModelSerializer):
     def create(self, validated_data):
@@ -50,13 +56,13 @@ class PlayerSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Player
-        fields = ("__all__")
+        fields = "__all__"
 
 
 # has access to request directly
 class PlayerViewSet(viewsets.ModelViewSet):
     serializer_class = PlayerSerializer
-    queryset = Player.objects.none() # empty dictionary
+    queryset = Player.objects.none()  # empty dictionary
 
     def get_queryset(self):
         # user = self.request.user
@@ -68,4 +74,3 @@ class PlayerViewSet(viewsets.ModelViewSet):
         #     return Player.objects.none()
         # else:
         #     return Player.objects.filter(user=user)
-
