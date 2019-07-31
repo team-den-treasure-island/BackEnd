@@ -1,10 +1,15 @@
 from rest_framework import serializers, viewsets
 from .models import Room, Player
 from collections import OrderedDict
+from rest_framework.permissions import BasePermission, IsAuthenticatedOrReadOnly
+from rest_framework.authentication import TokenAuthentication
+
 
 # convention is to name the serializer classes after what they
 # are serializing
 
+
+# class Token
 
 class RoomSerializer(serializers.HyperlinkedModelSerializer):
     # lookup_field = 'room_id'
@@ -32,6 +37,9 @@ class RoomSerializer(serializers.HyperlinkedModelSerializer):
 
 # has access to request directly
 class RoomViewSet(viewsets.ModelViewSet):
+    # can bitwise operate on these permission classes
+    # want permission to be either token or session
+    # permission_classes = [TokenAuthentication | IsAuthenticatedOrReadOnly]
     serializer_class = RoomSerializer
     queryset = Room.objects.none()  # empty dictionary
     lookup_field = "room_id"
