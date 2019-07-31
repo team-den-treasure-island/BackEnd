@@ -25,18 +25,22 @@ class Queue:
 
 
 my_key = ""
+my_name = ""
 if os.path.isfile("key.txt"):
     with open("key.txt", "r") as infile:
         my_key = infile.readlines()[0].strip()
 
-if len(sys.argv) >= 2:
+if len(sys.argv) >= 3:
     my_key = sys.argv[1].strip()
+    my_name = sys.argv[2].strip()
 
-if len(my_key) == 0:
-    print("No key provided!")
+if len(my_key) == 0 or len(my_name) == 0:
+    print("No key provided! Or Name Provided!!")
+    print("Expected format: basic_runner.py key name")
     exit()
 
 url = "https://lambda-treasure-hunt.herokuapp.com/api/adv"
+backend_url = "https://gentle-dusk-98459.herokuapp.com/api/"
 headers = {"content-type": "application/json", "Authorization": f"Token {my_key}"}
 cooldown = 0
 player = {}
@@ -69,6 +73,29 @@ player["max_weight"] = False
 # Error Response (400):
 #
 # {"cooldown": 5.447648, "errors": ["Cooldown Violation: +5s CD"]}
+def create_player(name, move_data):
+    r = requests.post(
+        f"{ backend_url }/players/",
+        json={
+            "name": name,
+            "current_room": move_data["room_id"]
+        },
+        headers=headers,
+    )
+    return r
+
+def update_player(name, move_data):
+    r = requests.put(
+        f"{ backend_url }/players/{name}/",
+        json={
+            "current_room": move_data["room_id"]
+        },
+        headers=headers,
+    )
+    if r.status_code is 404:
+        create_player(name, move_data)
+    return r
+
 
 
 def change_name(key, name):
@@ -81,9 +108,6 @@ def change_name(key, name):
 def pretty_print(ugly_json):
     print(json.dumps(ugly_json, indent=4, sort_keys=True))
 
-
-
-
 def init(key):
     r = requests.get(f"{ url }/init", headers=headers)
     return r
@@ -95,6 +119,7 @@ def move(key, direction, next_room):
         json={"direction": direction, "next_room_id": str(next_room)},
         headers=headers,
     )
+    update_player(r.json())
     return r
 
 def pray(key):
@@ -433,6 +458,7 @@ while True:
         break
 
 player["current_room"] = shape_move_response(rjson, roomGraph)
+breakpoint()
 
 
 roomGraph[f"{rjson['room_id']}"] = player["current_room"]

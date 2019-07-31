@@ -70,12 +70,15 @@ class PlayerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Player
         fields = "__all__"
+        lookup_field = "name"
+        extra_kwargs = {"url": {"lookup_field": "name"}}
 
 
 # has access to request directly
 class PlayerViewSet(viewsets.ModelViewSet):
     serializer_class = PlayerSerializer
     queryset = Player.objects.none()  # empty dictionary
+    lookup_field = "name"
 
     def get_queryset(self):
         # user = self.request.user
