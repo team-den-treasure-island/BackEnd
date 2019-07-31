@@ -39,7 +39,8 @@ if len(my_key) == 0 or len(my_name) == 0:
     print("Expected format: basic_runner.py key name")
     exit()
 
-url = "https://lambda-treasure-hunt.herokuapp.com/api/adv"
+# url = "https://lambda-treasure-hunt.herokuapp.com/api/adv"
+url = "http://localhost:8000/api/"
 backend_url = "https://gentle-dusk-98459.herokuapp.com/api/"
 headers = {"content-type": "application/json", "Authorization": f"Token {my_key}"}
 cooldown = 0
@@ -119,7 +120,7 @@ def move(key, direction, next_room):
         json={"direction": direction, "next_room_id": str(next_room)},
         headers=headers,
     )
-    update_player(r.json())
+    # update_player(r.json())
     return r
 
 def pray(key):
@@ -458,7 +459,7 @@ while True:
         break
 
 player["current_room"] = shape_move_response(rjson, roomGraph)
-breakpoint()
+# breakpoint()
 
 
 roomGraph[f"{rjson['room_id']}"] = player["current_room"]
