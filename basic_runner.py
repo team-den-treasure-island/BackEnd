@@ -5,6 +5,7 @@ import os
 import sys
 import random
 import datetime
+from decouple import config
 
 
 class Queue:
@@ -24,24 +25,28 @@ class Queue:
         return len(self.queue)
 
 
+backend_token = config("BACKEND_TOKEN")
+backend_headers = {"content-type": "application/json", "Authorization": backend_token}
+name_mappings = None
+with open("name_mappings.json", "r") as f:
+    name_mappings = json.load(f)
+
 my_key = ""
-my_name = ""
 if os.path.isfile("key.txt"):
     with open("key.txt", "r") as infile:
         my_key = infile.readlines()[0].strip()
 
-if len(sys.argv) >= 3:
+if len(sys.argv) >= 2:
     my_key = sys.argv[1].strip()
-    my_name = sys.argv[2].strip()
 
+my_name = name_mappings[my_key]
+print(f"My Name is {my_name}")
 if len(my_key) == 0 or len(my_name) == 0:
-    print("No key provided! Or Name Provided!!")
-    print("Expected format: basic_runner.py key name")
+    print("no key or matching name for that key!")
     exit()
 
-# url = "https://lambda-treasure-hunt.herokuapp.com/api/adv"
-url = "http://localhost:8000/api/"
-backend_url = "https://gentle-dusk-98459.herokuapp.com/api/"
+url = config("TREASURE_HUNT_URL")
+backend_url = config("BACKEND_URL")
 headers = {"content-type": "application/json", "Authorization": f"Token {my_key}"}
 cooldown = 0
 player = {}
@@ -76,24 +81,25 @@ player["max_weight"] = False
 # {"cooldown": 5.447648, "errors": ["Cooldown Violation: +5s CD"]}
 def create_player(name, move_data):
     r = requests.post(
-        f"{ backend_url }/players/",
+        f"{ backend_url }players/",
         json={
             "name": name,
             "current_room": move_data["room_id"]
         },
-        headers=headers,
+        headers=backend_headers,
     )
     return r
 
 def update_player(name, move_data):
     r = requests.put(
-        f"{ backend_url }/players/{name}/",
+        f"{ backend_url }players/{name}/",
         json={
+            "name": name,
             "current_room": move_data["room_id"]
         },
-        headers=headers,
+        headers=backend_headers,
     )
-    if r.status_code is 404:
+    if r.status_code == 404:
         create_player(name, move_data)
     return r
 
@@ -120,7 +126,7 @@ def move(key, direction, next_room):
         json={"direction": direction, "next_room_id": str(next_room)},
         headers=headers,
     )
-    # update_player(r.json())
+    update_player(my_name, r.json())
     return r
 
 def pray(key):
@@ -458,7 +464,11 @@ while True:
         cooldown = 0
         break
 
+# pretty_print(rjson)
+# pretty_print(get_status(my_key).json())
+# exit()
 player["current_room"] = shape_move_response(rjson, roomGraph)
+
 # breakpoint()
 
 
