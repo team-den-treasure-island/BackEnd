@@ -1,5 +1,6 @@
 from rest_framework import serializers, viewsets
 from .models import Room, Player
+from collections import OrderedDict
 
 # convention is to name the serializer classes after what they
 # are serializing
@@ -23,6 +24,10 @@ class RoomSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field = "room_id"
         fields = "__all__"
         extra_kwargs = {"url": {"lookup_field": "room_id"}}
+
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        return OrderedDict([(key, result[key]) for key in result if result[key] is not None])
 
 
 # has access to request directly
