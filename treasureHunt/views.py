@@ -98,18 +98,29 @@ class PlayerDetailsView(APIView):
             return Response(serialize.data)
         return Response(serialize.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
     class PlayerInitView(APIView):
-        def post(self, request, pk, format=None):
-            headers = 'Authorization: Token ' + str(pk)
+        mapping = {
+            "4b0963db718e09fbe815d75150d98d79d9a243bb": "kittendaddy69",
+            "5d57a24ad7c366fb7c3de0db9a2d7f1ccd6aaacf": "anon_denlife_loyalist",
+            "11fca1909b41121878367faa97cc6e92a3286cf0": "DenLifeZero",
+            "1862aa8dfe43381b4fbbdbbc5a83397e65824b54": "goose_h8r",
+            "203ef3ef95a3e8c6ef25faa74f40cc384d6378ec": "strugglebusallday"
+        }
+
+        def update_player(self, update, pk):
+            player = Player.objects.get(mapping[pk]=name)
+            player.current_room = update["room_id"]
+            player.cooldown = update["cooldown"]
+
+            return player
+
+        def get(self, pk, format=None):
             url = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/init/'
-            r = requests.get(url, headers)
-            response = r.json()
-            response['key'] = pk
-            return Response(response)
-
-
-
-
-
-
+            access_token = pk
+            try:
+                result = requests.get(url, headers={
+                    'Content-Type': 'application/json', 'Authorization': 'Token {}'.format(access_token)})
+                response = r.json()
+                updated = self.update_player(response, pk)
+                updated['key'] = pk
+                return Response(updated)
