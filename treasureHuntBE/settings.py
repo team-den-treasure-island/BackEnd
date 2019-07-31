@@ -42,16 +42,16 @@ REST_FRAMEWORK = {
 # Application definition
 
 INSTALLED_APPS = [
-    # "graphene_django",
+    "graphene_django",
     "corsheaders",
+    "rest_framework",
+    "treasureHunt",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "treasureHunt",
 ]
 
 MIDDLEWARE = [
@@ -141,7 +141,7 @@ STATIC_URL = "/static/"
 # Graphene Settings
 GRAPHENE = {
     # Tell graphene how to access schema variables
-    # "inside notes, schema.py, variable schema"
+    # "inside treasureHunt, schema.py, variable schema"
     "SCHEMA": "treasureHunt.schema.schema"
 }
 
