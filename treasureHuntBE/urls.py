@@ -15,8 +15,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+from treasureHunt.api import RoomViewSet, PlayerViewSet
+from graphene_django.views import GraphQLView
 
+
+router = routers.DefaultRouter()
+router.register(r"rooms", RoomViewSet)
+router.register(r"players", PlayerViewSet)
+
+# router = routers.DefaultRouter()
+# router.register(r"notes", PersonalNoteViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('treasureHunt.urls')),
+    path('api/', include(router.urls)),
+    # add graphQL route with graphiql interface enabled
+    path("graphql/", GraphQLView.as_view(graphiql=True)),
 ]
+
+  # if we need custom routes, we can add this back
+  # path('', include('treasureHunt.urls')),

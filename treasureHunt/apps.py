@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class DatabaseConfig(AppConfig):
-    name = 'database'
+class TreasureHuntConfig(AppConfig):
+    name = 'treasureHunt'
