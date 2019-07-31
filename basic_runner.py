@@ -278,7 +278,7 @@ def go_sell(key, player, roomGraph):
             time.sleep(cooldown)
 
         player["current_room"] = shape_move_response(r.json(), roomGraph)
-        roomGraph = load_roomgraph()
+        # roomGraph = load_roomgraph()
         roomGraph[f"{player['current_room']['room_id']}"] = player["current_room"]
         save_roomgraph(roomGraph)
 
@@ -333,6 +333,18 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
             print("Good response, Treasure Check")
             if "items" in this_json and not player["max_weight"]:
                 pretty_print(this_json)
+                while "great treasure" in this_json["items"]:
+                    print(f"great Treasure found! {this_json['items']}")
+                    print("sleeping cooldown")
+                    time.sleep(this_json["cooldown"])
+                    pu_response = pickup(my_key, "great treasure")
+                    # print("Pickup Response:")
+                    this_json = pu_response.json()
+                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                        player["max_weight"] = True
+                        break
+                    else:
+                        player["max_weight"] = False
                 while "shiny treasure" in this_json["items"]:
                     print(f"Shiny Treasure found! {this_json['items']}")
                     print("sleeping cooldown")
@@ -379,7 +391,7 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
             cooldown = 0
 
         player["current_room"] = shape_move_response(r.json(), roomGraph)
-        roomGraph = load_roomgraph()
+        # roomGraph = load_roomgraph()
         roomGraph[f"{player['current_room']['room_id']}"] = player["current_room"]
         save_roomgraph(roomGraph)
         if "Heavily Encumbered: +100% CD" in r.json()["messages"]:
@@ -392,7 +404,7 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
             break
 
 
-roomGraph = load_old_data()
+# roomGraph = load_old_data()
 # exit()
 
 
@@ -424,7 +436,7 @@ player["current_room"] = shape_move_response(rjson, roomGraph)
 
 
 roomGraph[f"{rjson['room_id']}"] = player["current_room"]
-save_roomgraph(roomGraph)
+# save_roomgraph(roomGraph)
 # traverse_path(my_key, player, "457", roomGraph, True)
 # breakpoint()
 # breakpoint()
@@ -436,8 +448,8 @@ iteration = 0
 # elevation hunter, then random
 while True:
     if player["max_weight"]:
-        print("top wuh oh")
-        breakpoint()
+        # print("top wuh oh")
+        # breakpoint()
         go_sell(my_key, player, roomGraph)
     print("**** BEGIN ELEVATION TRAVERSAL (Press Enter)")
     # input()
@@ -463,8 +475,8 @@ while True:
             # move to 1 away from shop
             traverse_path(my_key, player, target_room, roomGraph)
             # move to shope and sell everything
-            print("wuh oh")
-            breakpoint()
+            # print("wuh oh")
+            # breakpoint()
             go_sell(my_key, player, roomGraph)
             player["encumbered"] = False
         else:
@@ -559,6 +571,19 @@ while True:
                             # check for treasure
                             print("Good response, Treasure Check")
                             if "items" in this_json and not player["max_weight"]:
+                                while "great treasure" in this_json["items"]:
+                                    print(f"great Treasure found! {this_json['items']}")
+                                    print("sleeping cooldown")
+                                    time.sleep(this_json["cooldown"])
+                                    pu_response = pickup(my_key, "great treasure")
+                                    # print("Pickup Response:")
+                                    this_json = pu_response.json()
+                                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                                        player["max_weight"] = True
+                                        break
+                                    else:
+                                        player["max_weight"] = False
+
                                 while "shiny treasure" in this_json["items"]:
                                     print(f"Shiny Treasure found! {this_json['items']}")
                                     print("sleeping cooldown")
@@ -615,11 +640,11 @@ while True:
                     player["current_room"] = shape_move_response(
                         this_response.json(), roomGraph
                     )
-                    roomGraph = load_roomgraph()
+                    # roomGraph = load_roomgraph()
                     roomGraph[f"{player['current_room']['room_id']}"] = player[
                         "current_room"
                     ]
-                    save_roomgraph(roomGraph)
+                    # save_roomgraph(roomGraph)
                 print("====EXITING THIS TRAVERSAL====")
                 # break out of traversal loop, we've entered a new unelevated room
                 break
