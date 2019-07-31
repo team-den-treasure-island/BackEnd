@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from django.http import Http404
+import requests
 
 from .serializers import RoomSerializer, PlayerSerializer
 from .models import Player, Room
@@ -96,3 +97,19 @@ class PlayerDetailsView(APIView):
             serialize.save()
             return Response(serialize.data)
         return Response(serialize.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    class PlayerInitView(APIView):
+        def post(self, request, pk, format=None):
+            headers = 'Authorization: Token ' + str(pk)
+            url = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/init/'
+            r = requests.get(url, headers)
+            response = r.json()
+            response['key'] = pk
+            return Response(response)
+
+
+
+
+
+
