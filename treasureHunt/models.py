@@ -33,6 +33,8 @@ class Room(models.Model):
     s_to = models.IntegerField(default=None, blank=True, null=True)
     e_to = models.IntegerField(default=None, blank=True, null=True)
     w_to = models.IntegerField(default=None, blank=True, null=True)
+    description = models.TextField(default=None, blank=True, null=True)
+    title = models.CharField(max_length=255, default=None, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
