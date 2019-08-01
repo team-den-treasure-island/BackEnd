@@ -96,3 +96,34 @@ class PlayerDetailsView(APIView):
             serialize.save()
             return Response(serialize.data)
         return Response(serialize.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetWorldView(APIView):
+    def get(self):
+        rooms = list(Room.object.all())
+        response_obj = {}
+        for room in rooms:
+            room_obj = {}
+            exits_dict = {}
+            exits = {}
+            if room["n_to"]:
+                exits["n"] = room["n_to"]
+            if room["s_to"]:
+                exits["s"] = room["s_to"]
+            if room["e_to"]:
+                exits["e"] = room["e_to"]
+            if room["w_to"]:
+                exits["w"] = room["w_to"]
+
+            room_obj['exits'] = exits
+            room_obj['room_id'] = room['room_id']
+            room_obj['title'] = room['title']
+            room_obj['description'] = room['description']
+            room_obj['coordinates'] = tuple(
+                room['coord_x'], room['coord_y'])
+            room_obj['elevation'] = room['elevation']
+            room_obj['terrain'] = room['terrain']
+
+            response_obj[room['room_id']] = room_obj
+
+        return Response(response_obj)
