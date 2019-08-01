@@ -94,7 +94,9 @@ def run_seed(self):
                 n_to=this_room.get("exits").get("n"),
                 e_to=this_room.get("exits").get("e"),
                 s_to=this_room.get("exits").get("s"),
-                w_to=this_room.get("exits").get("w")
+                w_to=this_room.get("exits").get("w"),
+                description=this_room.get("description"),
+                title=this_room.get("title")
             )
             new_rooms.append(new_room)
         Room.objects.bulk_create(new_rooms)
