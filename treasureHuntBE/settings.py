@@ -30,12 +30,23 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 # ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'thawing-dawn-36205.herokuapp.com']
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'rocky-river-63913.herokuapp.com']
+ALLOWED_HOSTS = ["0.0.0.0", "localhost", "rocky-river-63913.herokuapp.com"]
 
 # allow read/write permissions for logged in users, only read for anonymous ones
+# "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
 REST_FRAMEWORK = {
+    # rest_framework takes the first of these that pass, so
+    # we can have users authenticate multiple ways
+    "DEFAULT_AUTHENTICATION_CLASSES":[
+        # "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication"
+    ],
+
+    # all of these must pass for permission to be granted
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
+        # "rest_framework.permissions.IsAuthenticated",
     ]
 }
 
@@ -46,6 +57,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "treasureHunt",
+    "rest_framework.authtoken",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
