@@ -8,7 +8,7 @@ from uuid import uuid4
 
 class Player(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    name = models.CharField(max_length=255, editable=True)
+    name = models.CharField(max_length=255, editable=True, unique=True)
     current_room = models.IntegerField(default=0)
     cooldown = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     explore_mode = models.BooleanField(default=False)
@@ -33,6 +33,8 @@ class Room(models.Model):
     s_to = models.IntegerField(default=None, blank=True, null=True)
     e_to = models.IntegerField(default=None, blank=True, null=True)
     w_to = models.IntegerField(default=None, blank=True, null=True)
+    description = models.TextField(default=None, blank=True, null=True)
+    title = models.CharField(max_length=255, default=None, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

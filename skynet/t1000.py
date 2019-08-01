@@ -5,6 +5,34 @@ import os
 import sys
 import random
 import datetime
+from decouple import config
+
+import signal
+import pdb
+
+# Drop into pdb on ctrl-c so we can issue specific commands
+def signal_handler(signal, frame):
+    pdb.set_trace()
+
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
+class Stack:
+    def __init__(self):
+        self.stack = []
+
+    def push(self, value):
+        self.stack.append(value)
+
+    def pop(self):
+        if self.size() > 0:
+            return self.stack.pop()
+        else:
+            return None
+
+    def size(self):
+        return len(self.stack)
 
 
 class Queue:
@@ -24,6 +52,20 @@ class Queue:
         return len(self.queue)
 
 
+##### SETTING UP #####
+backend_token = config("BACKEND_TOKEN")
+backend_headers = {"content-type": "application/json", "Authorization": backend_token}
+name_mappings = None
+treasure_hierarchy = [
+    "great treasure",
+    "shiny treasure",
+    "small treasure",
+    "tiny treasure",
+]
+
+with open("name_mappings.json", "r") as f:
+    name_mappings = json.load(f)
+
 my_key = ""
 if os.path.isfile("key.txt"):
     with open("key.txt", "r") as infile:
@@ -32,130 +74,23 @@ if os.path.isfile("key.txt"):
 if len(sys.argv) >= 2:
     my_key = sys.argv[1].strip()
 
-if len(my_key) == 0:
-    print("No key provided!")
+my_name = name_mappings[my_key]
+print(f"My Name is {my_name}")
+if len(my_key) == 0 or len(my_name) == 0:
+    print("no key or matching name for that key!")
     exit()
 
-url = "https://lambda-treasure-hunt.herokuapp.com/api/adv"
+url = config("TREASURE_HUNT_URL")
+backend_url = config("BACKEND_URL")
 headers = {"content-type": "application/json", "Authorization": f"Token {my_key}"}
 cooldown = 0
 player = {}
 player["encumbered"] = False
 player["max_weight"] = False
 
-# init
-# response:
-# {
-#     "room_id": 0,
-#     "title": "A brightly lit room",
-#     "description": "You are standing in the center of a brightly lit room. You notice a shop to the west and exits to the north, south and east.",
-#     "coordinates": "(60,60)",
-#     "elevation": 0,
-#     "terrain": "NORMAL",
-#     "players": [
-#         "player81",
-#         "player94",
-#         "player119",
-#         "player138",
-#         "player136",
-#     ],
-#     "items": [],
-#     "exits": ["n", "s", "e", "w"],
-#     "cooldown": 1.0,
-#     "errors": [],
-#     "messages": [],
-# }
-
-# Error Response (400):
-#
-# {"cooldown": 5.447648, "errors": ["Cooldown Violation: +5s CD"]}
 
 
-def change_name(key, name):
-    r = requests.post(
-        f"{ url }/change_name", json={"name": name, "confirm": "aye"}, headers=headers
-    )
-    return r
-
-
-def pretty_print(ugly_json):
-    print(json.dumps(ugly_json, indent=4, sort_keys=True))
-
-
-
-
-def init(key):
-    r = requests.get(f"{ url }/init", headers=headers)
-    return r
-
-
-def move(key, direction, next_room):
-    r = requests.post(
-        f"{ url }/move",
-        json={"direction": direction, "next_room_id": str(next_room)},
-        headers=headers,
-    )
-    return r
-
-def pray(key):
-    r = requests.post(
-        f"{ url }/pray",
-        data={},
-        headers=headers,
-    )
-    return r
-
-def flight(key, direction):
-    r = requests.post(
-        f"{ url }/pray",
-        json={"direction": direction},
-        headers=headers,
-    )
-    return r
-
-def dash(key, direction, num_rooms, next_room_ids):
-    r = requests.post(
-        f"{ url }/pray",
-        json={"direction": direction, "num_rooms": num_rooms, "next_room_ids": ",".join(next_room_ids)},
-        headers=headers,
-    )
-    return r
-
-
-def sell(key, name):
-    r = requests.post(
-        f"{ url }/sell", json={"name": name, "confirm": "yes"}, headers=headers
-    )
-    return r
-
-
-def pickup(key, name):
-    r = requests.post(f"{ url }/take", json={"name": name}, headers=headers)
-    return r
-
-
-def get_status(key):
-    r = requests.post(f"{ url }/status", data={}, headers=headers)
-    return r
-
-# breakpoint()
-
-# breakpoint()
-
-
-# load roomgraph from json if it exists
-def load_roomgraph(filename=None):
-    result = {}
-    if filename is None:
-        filename = "roomgraph.json"
-    if not os.path.isfile(filename):
-        return {}
-
-    with open(filename, "r") as f:
-        result = json.load(f)
-    return result
-
-
+# Script Commands
 # reshape move response
 def shape_move_response(response, roomGraph):
     result = {
@@ -278,7 +213,7 @@ def go_sell(key, player, roomGraph):
             time.sleep(cooldown)
 
         player["current_room"] = shape_move_response(r.json(), roomGraph)
-        roomGraph = load_roomgraph()
+        # roomGraph = load_roomgraph()
         roomGraph[f"{player['current_room']['room_id']}"] = player["current_room"]
         save_roomgraph(roomGraph)
 
@@ -333,6 +268,18 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
             print("Good response, Treasure Check")
             if "items" in this_json and not player["max_weight"]:
                 pretty_print(this_json)
+                while "great treasure" in this_json["items"]:
+                    print(f"great Treasure found! {this_json['items']}")
+                    print("sleeping cooldown")
+                    time.sleep(this_json["cooldown"])
+                    pu_response = pickup(my_key, "great treasure")
+                    # print("Pickup Response:")
+                    this_json = pu_response.json()
+                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                        player["max_weight"] = True
+                        break
+                    else:
+                        player["max_weight"] = False
                 while "shiny treasure" in this_json["items"]:
                     print(f"Shiny Treasure found! {this_json['items']}")
                     print("sleeping cooldown")
@@ -352,7 +299,10 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
                     pu_response = pickup(my_key, "small treasure")
                     # print("Pickup Response:")
                     this_json = pu_response.json()
-                    if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
+                    if (
+                        not ignore_weight
+                        and "Item too heavy: +5s CD" in this_json["errors"]
+                    ):
                         player["max_weight"] = True
                         break
                     else:
@@ -365,7 +315,10 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
                     pu_response = pickup(my_key, "tiny treasure")
                     # print("Pickup Response:")
                     this_json = pu_response.json()
-                    if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
+                    if (
+                        not ignore_weight
+                        and "Item too heavy: +5s CD" in this_json["errors"]
+                    ):
                         player["max_weight"] = True
                         break
                     else:
@@ -379,7 +332,7 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
             cooldown = 0
 
         player["current_room"] = shape_move_response(r.json(), roomGraph)
-        roomGraph = load_roomgraph()
+        # roomGraph = load_roomgraph()
         roomGraph[f"{player['current_room']['room_id']}"] = player["current_room"]
         save_roomgraph(roomGraph)
         if "Heavily Encumbered: +100% CD" in r.json()["messages"]:
@@ -391,8 +344,8 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
         if player["current_room"]["room_id"] == target_room_id:
             break
 
-
-roomGraph = load_old_data()
+breakpoint()
+# roomGraph = load_old_data()
 # exit()
 
 
@@ -420,14 +373,15 @@ while True:
         cooldown = 0
         break
 
+# pretty_print(rjson)
+# pretty_print(get_status(my_key).json())
+# exit()
 player["current_room"] = shape_move_response(rjson, roomGraph)
-
-
 roomGraph[f"{rjson['room_id']}"] = player["current_room"]
-save_roomgraph(roomGraph)
+# save_roomgraph(roomGraph)
 # traverse_path(my_key, player, "457", roomGraph, True)
 # breakpoint()
-# breakpoint()
+breakpoint()
 
 # main traversal loop
 # 500 rooms
@@ -436,8 +390,8 @@ iteration = 0
 # elevation hunter, then random
 while True:
     if player["max_weight"]:
-        print("top wuh oh")
-        breakpoint()
+        # print("top wuh oh")
+        # breakpoint()
         go_sell(my_key, player, roomGraph)
     print("**** BEGIN ELEVATION TRAVERSAL (Press Enter)")
     # input()
@@ -463,8 +417,8 @@ while True:
             # move to 1 away from shop
             traverse_path(my_key, player, target_room, roomGraph)
             # move to shope and sell everything
-            print("wuh oh")
-            breakpoint()
+            # print("wuh oh")
+            # breakpoint()
             go_sell(my_key, player, roomGraph)
             player["encumbered"] = False
         else:
@@ -559,6 +513,19 @@ while True:
                             # check for treasure
                             print("Good response, Treasure Check")
                             if "items" in this_json and not player["max_weight"]:
+                                while "great treasure" in this_json["items"]:
+                                    print(f"great Treasure found! {this_json['items']}")
+                                    print("sleeping cooldown")
+                                    time.sleep(this_json["cooldown"])
+                                    pu_response = pickup(my_key, "great treasure")
+                                    # print("Pickup Response:")
+                                    this_json = pu_response.json()
+                                    if "Item too heavy: +5s CD" in this_json["errors"]:
+                                        player["max_weight"] = True
+                                        break
+                                    else:
+                                        player["max_weight"] = False
+
                                 while "shiny treasure" in this_json["items"]:
                                     print(f"Shiny Treasure found! {this_json['items']}")
                                     print("sleeping cooldown")
@@ -615,11 +582,11 @@ while True:
                     player["current_room"] = shape_move_response(
                         this_response.json(), roomGraph
                     )
-                    roomGraph = load_roomgraph()
+                    # roomGraph = load_roomgraph()
                     roomGraph[f"{player['current_room']['room_id']}"] = player[
                         "current_room"
                     ]
-                    save_roomgraph(roomGraph)
+                    # save_roomgraph(roomGraph)
                 print("====EXITING THIS TRAVERSAL====")
                 # break out of traversal loop, we've entered a new unelevated room
                 break

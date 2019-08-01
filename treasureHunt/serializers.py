@@ -11,7 +11,6 @@ class PlayerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
