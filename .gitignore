@@ -3,4 +3,8 @@ key.txt
 .env
 roomgraph.json
 **/*.sqlite3
+<<<<<<< HEAD
+db.sqlite3
+=======
 name_mappings.json
+>>>>>>> 62cecc9bf42b354e824071c49d7dae34c5292cb0
