@@ -444,7 +444,7 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
 
 ####### PROGRAM START ########
 roomGraph = load_roomgraph()
-# breakpoint()
+breakpoint()
 direction_opposites = {"n": "s", "e": "w", "s": "n", "w": "e"}
 initial_exits = {}
 
@@ -470,15 +470,11 @@ while True:
 # pretty_print(get_status(my_key).json())
 # exit()
 player["current_room"] = shape_move_response(rjson, roomGraph)
-
-# breakpoint()
-
-
 roomGraph[f"{rjson['room_id']}"] = player["current_room"]
 # save_roomgraph(roomGraph)
 # traverse_path(my_key, player, "457", roomGraph, True)
 # breakpoint()
-# breakpoint()
+breakpoint()
 
 # main traversal loop
 # 500 rooms
