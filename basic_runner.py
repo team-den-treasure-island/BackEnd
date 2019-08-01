@@ -84,24 +84,26 @@ def create_player(name, move_data):
         f"{ backend_url }players/",
         json={
             "name": name,
-            "current_room": move_data["room_id"]
+            "current_room": move_data["room_id"],
+            "cooldown": move_data["cooldown"]
         },
         headers=backend_headers,
     )
     return r
 
 def update_player(name, move_data):
-    r = requests.put(
+    response = requests.put(
         f"{ backend_url }players/{name}/",
         json={
             "name": name,
-            "current_room": move_data["room_id"]
+            "current_room": move_data["room_id"],
+            "cooldown": move_data["cooldown"]
         },
         headers=backend_headers,
     )
-    if r.status_code == 404:
+    if response.status_code == 404:
         create_player(name, move_data)
-    return r
+    return response
 
 
 
