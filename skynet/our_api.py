@@ -16,6 +16,10 @@ class OurApi:
         except Exception as e:
             return {"error": res.content}
 
+    def get_players(self):
+        res = requests.get(f"{self.url}players/")
+        return self.handle_res(res)
+
     def get_rooms(self):
         res = requests.get(f"{self.url}rooms/")
         return self.handle_res(res)
@@ -35,28 +39,28 @@ class OurApi:
         )
         return self.handle_res(res)
 
-    def create_player(self, name, move_data):
+    def create_player(self, name, player_data):
         res = requests.post(
             f"{ self.url }players/",
             json={
                 "name": name,
-                "current_room": move_data["room_id"],
-                "cooldown": move_data["cooldown"],
+                "current_room": player_data["room_id"],
+                "cooldown": player_data["cooldown"],
             },
             headers=self.headers,
         )
         return self.handle_res(res)
 
-    def update_player(self, name, move_data):
+    def update_player(self, name, player_data):
         res = requests.put(
             f"{ self.url }players/{name}/",
             json={
                 "name": name,
-                "current_room": move_data["room_id"],
-                "cooldown": move_data["cooldown"],
+                "current_room": player_data["room_id"],
+                "cooldown": player_data["cooldown"],
             },
             headers=self.headers,
         )
         if res.status_code == 404:
-            create_player(name, move_data)
+            create_player(name, player_data)
         return self.handle_res(res)

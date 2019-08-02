@@ -172,9 +172,9 @@ def get_status(key):
     r = requests.post(f"{ url }/status", data={}, headers=headers)
     return r
 
-# breakpoint()
-
-# breakpoint()
+def drop(key, name):
+    r = requests.post(f"{ url }/drop", json={"name": name}, headers=headers)
+    return r
 
 
 # load roomgraph from json if it exists
@@ -367,11 +367,11 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
             print("Good response, Treasure Check")
             if "items" in this_json and not player["max_weight"]:
                 pretty_print(this_json)
-                while "amazing treasure" in this_json["items"]:
-                    print(f"amazing Treasure found! {this_json['items']}")
+                while "flower" in this_json["items"]:
+                    print(f"flower found! {this_json['items']}")
                     print("sleeping cooldown")
                     time.sleep(this_json["cooldown"])
-                    pu_response = pickup(my_key, "amazing treasure")
+                    pu_response = pickup(my_key, "flower")
                     # print("Pickup Response:")
                     this_json = pu_response.json()
                     if "Item too heavy: +5s CD" in this_json["errors"]:
@@ -379,56 +379,68 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
                         break
                     else:
                         player["max_weight"] = False
-                while "great treasure" in this_json["items"]:
-                    print(f"great Treasure found! {this_json['items']}")
-                    print("sleeping cooldown")
-                    time.sleep(this_json["cooldown"])
-                    pu_response = pickup(my_key, "great treasure")
-                    # print("Pickup Response:")
-                    this_json = pu_response.json()
-                    if "Item too heavy: +5s CD" in this_json["errors"]:
-                        player["max_weight"] = True
-                        break
-                    else:
-                        player["max_weight"] = False
-                while "shiny treasure" in this_json["items"]:
-                    print(f"Shiny Treasure found! {this_json['items']}")
-                    print("sleeping cooldown")
-                    time.sleep(this_json["cooldown"])
-                    pu_response = pickup(my_key, "shiny treasure")
-                    # print("Pickup Response:")
-                    this_json = pu_response.json()
-                    if "Item too heavy: +5s CD" in this_json["errors"]:
-                        player["max_weight"] = True
-                        break
-                    else:
-                        player["max_weight"] = False
-                while "small treasure" in this_json["items"]:
-                    print(f"Small Treasure found! {this_json['items']}")
-                    print("sleeping cooldown")
-                    time.sleep(this_json["cooldown"])
-                    pu_response = pickup(my_key, "small treasure")
-                    # print("Pickup Response:")
-                    this_json = pu_response.json()
-                    if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
-                        player["max_weight"] = True
-                        break
-                    else:
-                        player["max_weight"] = False
-
-                while "tiny treasure" in this_json["items"]:
-                    print(f"Treasure found! {this_json['items']}")
-                    print("sleeping cooldown")
-                    time.sleep(this_json["cooldown"])
-                    pu_response = pickup(my_key, "tiny treasure")
-                    # print("Pickup Response:")
-                    this_json = pu_response.json()
-                    if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
-                        player["max_weight"] = True
-                        break
-                    else:
-                        player["max_weight"] = False
-                    # breakpoint()
+                # while "amazing treasure" in this_json["items"]:
+                #     print(f"amazing Treasure found! {this_json['items']}")
+                #     print("sleeping cooldown")
+                #     time.sleep(this_json["cooldown"])
+                #     pu_response = pickup(my_key, "amazing treasure")
+                #     # print("Pickup Response:")
+                #     this_json = pu_response.json()
+                #     if "Item too heavy: +5s CD" in this_json["errors"]:
+                #         player["max_weight"] = True
+                #         break
+                #     else:
+                #         player["max_weight"] = False
+                # while "great treasure" in this_json["items"]:
+                #     print(f"great Treasure found! {this_json['items']}")
+                #     print("sleeping cooldown")
+                #     time.sleep(this_json["cooldown"])
+                #     pu_response = pickup(my_key, "great treasure")
+                #     # print("Pickup Response:")
+                #     this_json = pu_response.json()
+                #     if "Item too heavy: +5s CD" in this_json["errors"]:
+                #         player["max_weight"] = True
+                #         break
+                #     else:
+                #         player["max_weight"] = False
+                # while "shiny treasure" in this_json["items"]:
+                #     print(f"Shiny Treasure found! {this_json['items']}")
+                #     print("sleeping cooldown")
+                #     time.sleep(this_json["cooldown"])
+                #     pu_response = pickup(my_key, "shiny treasure")
+                #     # print("Pickup Response:")
+                #     this_json = pu_response.json()
+                #     if "Item too heavy: +5s CD" in this_json["errors"]:
+                #         player["max_weight"] = True
+                #         break
+                #     else:
+                #         player["max_weight"] = False
+                # while "small treasure" in this_json["items"]:
+                #     print(f"Small Treasure found! {this_json['items']}")
+                #     print("sleeping cooldown")
+                #     time.sleep(this_json["cooldown"])
+                #     pu_response = pickup(my_key, "small treasure")
+                #     # print("Pickup Response:")
+                #     this_json = pu_response.json()
+                #     if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
+                #         player["max_weight"] = True
+                #         break
+                #     else:
+                #         player["max_weight"] = False
+                #
+                # while "tiny treasure" in this_json["items"]:
+                #     print(f"Treasure found! {this_json['items']}")
+                #     print("sleeping cooldown")
+                #     time.sleep(this_json["cooldown"])
+                #     pu_response = pickup(my_key, "tiny treasure")
+                #     # print("Pickup Response:")
+                #     this_json = pu_response.json()
+                #     if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
+                #         player["max_weight"] = True
+                #         break
+                #     else:
+                #         player["max_weight"] = False
+                #     # breakpoint()
 
             rjson = r.json()
             cooldown = rjson["cooldown"]
@@ -456,7 +468,7 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
 
 ####### PROGRAM START ########
 roomGraph = load_roomgraph()
-breakpoint()
+# breakpoint()
 direction_opposites = {"n": "s", "e": "w", "s": "n", "w": "e"}
 initial_exits = {}
 
@@ -618,11 +630,11 @@ while True:
                             # check for treasure
                             print("Good response, Treasure Check")
                             if "items" in this_json and not player["max_weight"]:
-                                while "amazing treasure" in this_json["items"]:
-                                    print(f"amazing Treasure found! {this_json['items']}")
+                                while "flower" in this_json["items"]:
+                                    print(f"flower found! {this_json['items']}")
                                     print("sleeping cooldown")
                                     time.sleep(this_json["cooldown"])
-                                    pu_response = pickup(my_key, "amazing treasure")
+                                    pu_response = pickup(my_key, "flower")
                                     # print("Pickup Response:")
                                     this_json = pu_response.json()
                                     if "Item too heavy: +5s CD" in this_json["errors"]:
@@ -630,58 +642,70 @@ while True:
                                         break
                                     else:
                                         player["max_weight"] = False
-                                while "great treasure" in this_json["items"]:
-                                    print(f"great Treasure found! {this_json['items']}")
-                                    print("sleeping cooldown")
-                                    time.sleep(this_json["cooldown"])
-                                    pu_response = pickup(my_key, "great treasure")
-                                    # print("Pickup Response:")
-                                    this_json = pu_response.json()
-                                    if "Item too heavy: +5s CD" in this_json["errors"]:
-                                        player["max_weight"] = True
-                                        break
-                                    else:
-                                        player["max_weight"] = False
-
-                                while "shiny treasure" in this_json["items"]:
-                                    print(f"Shiny Treasure found! {this_json['items']}")
-                                    print("sleeping cooldown")
-                                    time.sleep(this_json["cooldown"])
-                                    pu_response = pickup(my_key, "shiny treasure")
-                                    # print("Pickup Response:")
-                                    this_json = pu_response.json()
-                                    if "Item too heavy: +5s CD" in this_json["errors"]:
-                                        player["max_weight"] = True
-                                        break
-                                    else:
-                                        player["max_weight"] = False
-
-                                while "small treasure" in this_json["items"]:
-                                    print(f"Small Treasure found! {this_json['items']}")
-                                    print("sleeping cooldown")
-                                    time.sleep(this_json["cooldown"])
-                                    pu_response = pickup(my_key, "small treasure")
-                                    # print("Pickup Response:")
-                                    this_json = pu_response.json()
-                                    if "Item too heavy: +5s CD" in this_json["errors"]:
-                                        player["max_weight"] = True
-                                        break
-                                    else:
-                                        player["max_weight"] = False
-
-                                while "tiny treasure" in this_json["items"]:
-                                    print(f"Treasure found! {this_json['items']}")
-                                    print("sleeping cooldown")
-                                    time.sleep(this_json["cooldown"])
-                                    pu_response = pickup(my_key, "tiny treasure")
-                                    # print("Pickup Response:")
-                                    this_json = pu_response.json()
-                                    if "Item too heavy: +5s CD" in this_json["errors"]:
-                                        player["max_weight"] = True
-                                        break
-                                    else:
-                                        player["max_weight"] = False
-                                    # breakpoint()
+                                # while "amazing treasure" in this_json["items"]:
+                                #     print(f"amazing Treasure found! {this_json['items']}")
+                                #     print("sleeping cooldown")
+                                #     time.sleep(this_json["cooldown"])
+                                #     pu_response = pickup(my_key, "amazing treasure")
+                                #     # print("Pickup Response:")
+                                #     this_json = pu_response.json()
+                                #     if "Item too heavy: +5s CD" in this_json["errors"]:
+                                #         player["max_weight"] = True
+                                #         break
+                                #     else:
+                                #         player["max_weight"] = False
+                                # while "great treasure" in this_json["items"]:
+                                #     print(f"great Treasure found! {this_json['items']}")
+                                #     print("sleeping cooldown")
+                                #     time.sleep(this_json["cooldown"])
+                                #     pu_response = pickup(my_key, "great treasure")
+                                #     # print("Pickup Response:")
+                                #     this_json = pu_response.json()
+                                #     if "Item too heavy: +5s CD" in this_json["errors"]:
+                                #         player["max_weight"] = True
+                                #         break
+                                #     else:
+                                #         player["max_weight"] = False
+                                #
+                                # while "shiny treasure" in this_json["items"]:
+                                #     print(f"Shiny Treasure found! {this_json['items']}")
+                                #     print("sleeping cooldown")
+                                #     time.sleep(this_json["cooldown"])
+                                #     pu_response = pickup(my_key, "shiny treasure")
+                                #     # print("Pickup Response:")
+                                #     this_json = pu_response.json()
+                                #     if "Item too heavy: +5s CD" in this_json["errors"]:
+                                #         player["max_weight"] = True
+                                #         break
+                                #     else:
+                                #         player["max_weight"] = False
+                                #
+                                # while "small treasure" in this_json["items"]:
+                                #     print(f"Small Treasure found! {this_json['items']}")
+                                #     print("sleeping cooldown")
+                                #     time.sleep(this_json["cooldown"])
+                                #     pu_response = pickup(my_key, "small treasure")
+                                #     # print("Pickup Response:")
+                                #     this_json = pu_response.json()
+                                #     if "Item too heavy: +5s CD" in this_json["errors"]:
+                                #         player["max_weight"] = True
+                                #         break
+                                #     else:
+                                #         player["max_weight"] = False
+                                #
+                                # while "tiny treasure" in this_json["items"]:
+                                #     print(f"Treasure found! {this_json['items']}")
+                                #     print("sleeping cooldown")
+                                #     time.sleep(this_json["cooldown"])
+                                #     pu_response = pickup(my_key, "tiny treasure")
+                                #     # print("Pickup Response:")
+                                #     this_json = pu_response.json()
+                                #     if "Item too heavy: +5s CD" in this_json["errors"]:
+                                #         player["max_weight"] = True
+                                #         break
+                                #     else:
+                                #         player["max_weight"] = False
+                                #     # breakpoint()
 
                             print(json.dumps(this_json, indent=4, sort_keys=True))
                             print(f"Waiting {this_json['cooldown']}")
