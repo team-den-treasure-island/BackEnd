@@ -16,6 +16,10 @@ class OurApi:
         except Exception as e:
             return {"error": res.content}
 
+    def get_players(self):
+        res = requests.get(f"{self.url}players/")
+        return self.handle_res(res)
+
     def get_rooms(self):
         res = requests.get(f"{self.url}rooms/")
         return self.handle_res(res)
