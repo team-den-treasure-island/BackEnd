@@ -1,5 +1,6 @@
 # from .our_api import OurApi
 # from .treasure_api import LambdaApi
+import sys
 
 TREASURE_HIERARCHY = [
     "great treasure",
@@ -59,6 +60,8 @@ class TreasureHunter:
         self.name = name
         self.room_id = None
         self.destination = None
+        self.can_fly = True
+        self.can_dash = True
 
     # update our roomGraph
     def refresh_rooms(self):
@@ -74,7 +77,7 @@ class TreasureHunter:
             self.roomGraph[f"{room['room_id']}"] = room
         return res
 
-    # update from our api
+    # update position and explore_mode from our api
     def refresh_our_info(self):
         res = self.our_api.get_players()
         # breakpoint()
@@ -103,6 +106,62 @@ class TreasureHunter:
             print(lambda_info.get("error"))
             return
         self.room_id = lambda_info.get("room_id")
+
+    # find all paths and estimate their time based on
+    # ability use, elevation, and traps
+    def find_shortest_path_by_time(self, start_id, end_id):
+        all_paths = self.find_all_paths(start_id, end_id)
+
+        lowest_time = sys.maxsize
+        lowest_path = None
+
+        # iterate over all paths
+        for path in all_paths:
+            time_factor = 0
+            reduced_path = list(path)
+
+            # if we can dash, consider the dash lines as one step
+            if self.can_dash:
+                i = 0
+                while i < len(path) - 1:
+                    count_repeats = 1
+                    j = i
+                    while j < len(path) - 1:
+                        if path[j][0] != path[j + 1][0]:
+                            break
+                        count_repeats += 1
+                        j += 1
+                    if count_repeats > 2:
+                        i += count_repeats
+                        time_factor += 33
+                        reduced_path = path[count_repeats:]
+                    elif (
+                        count_repeats == 2
+                        and self.roomGraph[str(path[i][1])].get("terrain") == "TRAP"
+                    ):
+                        # we're inefficiently going to jump the traps
+                        time_factor += 33
+                        reduced_path = path[count_repeats:]
+                    else:
+                        # otherwise, we're moving to each
+                        time_factor += 15
+                        i += 1
+
+            if self.can_fly:
+                # if you can fly, you skip a bit of cooldown
+                for move in reduced_path:
+                    if self.roomGraph[str(move[1])].get("elevation") > 0:
+                        time_factor -= 5
+
+            for move in reduced_path:
+                # add trap penalties
+                if self.roomGraph[str(move[1])].get("terrain") == "TRAP":
+                    time_factor += 30
+
+            if time_factor < lowest_time:
+                lowest_time = time_factor
+                lowest_path = path
+        return lowest_path
 
     # bfs to find the shortest route by number of rooms
     def find_shortest_path(self, start_id, end_id):
@@ -178,7 +237,7 @@ class TreasureHunter:
 
                 # if we found the path, return it
                 if room_id == end_id:
-                    all_paths.append( path )
+                    all_paths.append(path)
 
                 if len(visited) == len(self.roomGraph):
                     # break out condition
