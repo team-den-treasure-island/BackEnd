@@ -1,6 +1,7 @@
 # from .our_api import OurApi
 # from .treasure_api import LambdaApi
 import sys
+import time
 
 TREASURE_HIERARCHY = [
     "great treasure",
@@ -61,12 +62,17 @@ class TreasureHunter:
         self.name = name
         self.room_id = None
         self.destination = None
-        self.can_fly = True
-        self.can_dash = True
+        self.can_fly = False
+        self.can_dash = False
         self.inventory = []
         self.gold = 0
         self.encumberance = 0
         self.strength = 0
+        self.movement_queue = []
+        self.tick = 0
+        self.tick_time = 500
+        self.titleToId = {}
+        self.pickup_mode = False
 
     # update our roomGraph
     def refresh_rooms(self):
@@ -74,6 +80,7 @@ class TreasureHunter:
         for room in res:
             # manipulate our api's room data response to match
             # lambda's
+            self.titleToId[room.get("title")] = room.get("room_id")
             room["exits"] = {
                 d: room[f"{d}_to"]
                 for d in DIRECTIONS
@@ -104,13 +111,13 @@ class TreasureHunter:
         self.encumberance = status.get("encumberance")
         self.strength = status.get("strength")
         self.inventory = status.get("inventory")
-        self.room_id = lambda_info.get("room_id")
+        self.room_id = status.get("room_id")
 
         # if we have one item, we know the weight off our encumberance
         # opportunity to store weights on backend
         if self.inventory is not None and len(self.inventory) == 1:
             TREASURE_WEIGHTS[self.inventory[0]] = self.encumberance
-        self.gold = lambda_info.get("gold")
+        self.gold = status.get("gold")
 
     # update from lambda api
     def prepare_to_start(self):
@@ -266,3 +273,107 @@ class TreasureHunter:
                             path_copy = list(path)
                             path_copy.append((k, v))
                             q.enqueue(path_copy)
+
+    # Brain Function
+    def brain_tick():
+        elapsed = time.time() - self.tick
+        self.tick = time.time()
+
+        self.refresh_our_info()
+
+        # check explore mode
+        if self.explore_mode:
+            time.sleep(120)
+            return
+
+        # if it's still on, assume control
+        elif self.explore_mode:
+            self.our_api.update_player(self.name, {"explore_mode": False})
+            self.explorer_mode = False
+
+        # update from lambda, rate limiter is on the API
+        self.update_status()
+        overweight = self.encumberance > self.strength
+        max_weight = self.encumberance >= 19
+
+        # if we don't know where the shop is
+        if self.titleToId.get("Shop") is None:
+            # do something cool!
+            print("No Shop!")
+            pass
+
+        if self.titleToId.get("Pirate Ry's") is None:
+            # do something cool!
+            print("No Pirate!")
+            pass
+
+        if self.titleToId.get("Linh's Shrine") is None:
+            # do something cool!
+            print("No Dash Shrine!")
+            pass
+
+        if self.titleToId.get("The Peak of Mt. Holloway") is None:
+            # do something cool!
+            print("No Flight Shrine!")
+            pass
+
+        # if we're max weight, go home on the double
+        if max_weight:
+            self.pickup_mode = False
+            self.go_sell(self.pickup_mode)
+            pass
+
+        # if we're overweight, I mean... treasure's treasure
+        if overweight:
+            self.pickup_mode = True
+            # self.go_sell(False)
+            pass
+
+        if not self.can_dash:
+            # go to the dash shrine fast
+            self.pickup_mode = False
+            self.go_to_id(this.nameToId("Linh's Shrine"))
+            self.lambda_api.pray()
+            self.can_dash = True
+            self.our_api.update_player(self.name, {"can_dash": True})
+            pass
+
+        if not self.can_fly:
+            # go to the fly shrine fast
+            self.pickup_mode = False
+            self.go_to_id(this.nameToId("The Peak of Mt. Holloway"))
+            self.lambda_api.pray()
+            self.can_fly = True
+            self.our_api.update_player(self.name, {"can_fly": True})
+            pass
+
+        next_route = None
+        if self.destination:
+            # move to destination
+            next_route = find_shortest_path_by_time(self.destination)
+        else:
+            # otherwise, we're on the hunt!
+            choice = None
+            roomKeys = list(self.roomGraph.keys())
+            while choice is not None and roomGraph[choice].get("terrain") != "TRAP":
+                choice = random.choice(roomKeys)
+            next_route = find_shortest_path_by_time(
+                random.choice(list(self.roomGraph.keys()))
+            )
+
+        dash_count = 0
+        next_room = next_route[0]
+
+        # while dash_count < 2:
+
+        # check if room after next is the same direction and a trap
+        # > 2 here because we might be moving to a trap room
+        if (
+            len(next_route) > 2
+            and next_route[0][0] == next_route[1][0]
+            and next_route[1].get("terrain") == "TRAP"
+        ):
+            # self.dash()
+            pass
+
+        # count dashes if possible
