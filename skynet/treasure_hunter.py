@@ -10,6 +10,7 @@ TREASURE_HIERARCHY = [
 ]
 DIRECTION_OPPOSITES = {"n": "s", "e": "w", "s": "n", "w": "e"}
 DIRECTIONS = ["n", "s", "e", "w"]
+ITEM_WEIGHTS = {"shiny treasure": 2}
 
 
 class Stack:
@@ -62,6 +63,10 @@ class TreasureHunter:
         self.destination = None
         self.can_fly = True
         self.can_dash = True
+        self.inventory = []
+        self.gold = 0
+        self.encumberance = 0
+        self.strength = 0
 
     # update our roomGraph
     def refresh_rooms(self):
@@ -92,6 +97,21 @@ class TreasureHunter:
                 self.explore_mode = player.get("explore_mode")
         return res
 
+    # refresh my lambda status
+    def update_status(self):
+        # unsafe here but going with it for now
+        status = self.lambda_api.get_status()
+        self.encumberance = status.get("encumberance")
+        self.strength = status.get("strength")
+        self.inventory = status.get("inventory")
+        self.room_id = lambda_info.get("room_id")
+
+        # if we have one item, we know the weight off our encumberance
+        # opportunity to store weights on backend
+        if self.inventory is not None and len(self.inventory) == 1:
+            TREASURE_WEIGHTS[self.inventory[0]] = self.encumberance
+        self.gold = lambda_info.get("gold")
+
     # update from lambda api
     def prepare_to_start(self):
         self.refresh_our_info()
@@ -99,13 +119,7 @@ class TreasureHunter:
             # we're not ready to go
             # someone turned us off
             return False
-
-        lambda_info = self.lambda_api.init()
-        # breakpoint()
-        if lambda_info.get("error") is not None:
-            print(lambda_info.get("error"))
-            return
-        self.room_id = lambda_info.get("room_id")
+        self.update_status()
 
     # find all paths and estimate their time based on
     # ability use, elevation, and traps
