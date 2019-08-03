@@ -83,6 +83,15 @@ class LambdaApi:
             headers=self.headers,
         )
 
+    def fly(self, direction, next_room):
+        return self.cooldown_request(
+            requests.post,
+            f"{ self.url }/fly",
+            json={"direction": direction, "next_room_id": str(next_room)},
+            headers=self.headers,
+        )
+
+
     def pray(self):
         return self.cooldown_request(
             requests.post, f"{ self.url }/pray", data={}, headers=self.headers
@@ -93,14 +102,14 @@ class LambdaApi:
             f"{ self.url }/pray", json={"direction": direction}, headers=self.headers
         )
 
-    def dash(self, direction, num_rooms, next_room_ids):
+    def dash(self, dash_path):
         return self.cooldown_request(
             requests.post,
             f"{ self.url }/pray",
             json={
-                "direction": direction,
-                "num_rooms": num_rooms,
-                "next_room_ids": ",".join(next_room_ids),
+                "direction": dash_path[0][0],
+                "num_rooms": len(dash_path),
+                "next_room_ids": ",".join(dash_path),
             },
             headers=self.headers,
         )
@@ -128,7 +137,7 @@ class LambdaApi:
 
     def get_balance(self):
         return self.cooldown_request(
-            requests.get, f"{ self.url }/bc/get_balance", headers=self.headers
+            requests.get, f"{ self.url }/bc/get_balance/", headers=self.headers
         )
 
     def mine(self, proof):

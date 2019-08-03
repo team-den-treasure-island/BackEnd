@@ -73,6 +73,9 @@ class TreasureHunter:
         self.tick_time = 500
         self.titleToId = {}
         self.pickup_mode = False
+        self.has_jacket = False
+        self.has_shoes = False
+        self.coin_balance = 0
 
     # update our roomGraph
     def refresh_rooms(self):
@@ -296,6 +299,11 @@ class TreasureHunter:
         overweight = self.encumberance > self.strength
         max_weight = self.encumberance >= 19
 
+        # name of the game, step 1: if we're in the shop with items, sell them
+        if self.room_id == self.titleToId("Shop") and len(self.inventory) > 0:
+            self.sell_next_item()
+            return
+
         # if we don't know where the shop is
         if self.titleToId.get("Shop") is None:
             # do something cool!
@@ -317,35 +325,51 @@ class TreasureHunter:
             print("No Flight Shrine!")
             pass
 
+        if self.titleToId.get("Transmogriphier") is None:
+            # do something cool!
+            print("No Transmogriphier!")
+            pass
+
         # if we're max weight, go home on the double
         if max_weight:
             self.pickup_mode = False
-            self.go_sell(self.pickup_mode)
-            pass
+            self.destination = self.nameToId("Shop")
 
         # if we're overweight, I mean... treasure's treasure
         if overweight:
             self.pickup_mode = True
-            # self.go_sell(False)
+            self.destination = self.nameToId("Shop")
             pass
 
+        # if we can't dash, go to the shrine and pray
         if not self.can_dash:
-            # go to the dash shrine fast
-            self.pickup_mode = False
-            self.go_to_id(this.nameToId("Linh's Shrine"))
-            self.lambda_api.pray()
-            self.can_dash = True
-            self.our_api.update_player(self.name, {"can_dash": True})
-            pass
+            # pray if we're there
+            if self.room_id == self.nameToId["Linh's Shrine"]:
+                self.lambda_api.pray()
+                self.can_dash = True
+                self.our_api.update_player(self.name, {"can_dash": True})
+                return
 
+            # otherwise, go there quickly
+            else:
+                self.pickup_mode = False
+                self.destination = self.nameToId["Linh's Shrine"]
+                pass
+
+        # if we can't fly, go to the shrine and pray
         if not self.can_fly:
-            # go to the fly shrine fast
-            self.pickup_mode = False
-            self.go_to_id(this.nameToId("The Peak of Mt. Holloway"))
-            self.lambda_api.pray()
-            self.can_fly = True
-            self.our_api.update_player(self.name, {"can_fly": True})
-            pass
+            # pray if we're there
+            if self.room_id == self.nameToId["The Peak of Mt. Holloway"]:
+                self.lambda_api.pray()
+                self.can_fly = True
+                self.our_api.update_player(self.name, {"can_fly": True})
+                return
+
+            # otherwise, go there quickly
+            else:
+                self.pickup_mode = False
+                self.destination = self.nameToId["Linh's Shrine"]
+                pass
 
         next_route = None
         if self.destination:
@@ -361,19 +385,38 @@ class TreasureHunter:
                 random.choice(list(self.roomGraph.keys()))
             )
 
+        # count dashes if possible
         dash_count = 0
         next_room = next_route[0]
+        dash_path = []
 
-        # while dash_count < 2:
+        i = 1
+        while i < len(next_route):
+            if next_route[i - 1] != next_route[i]:
+                break
+            dash_path.append(next_route[i])
+            dash_count += 1
+
+        if dash_count > 2:
+            self.lambda_api.dash(dash_path)
+            return
 
         # check if room after next is the same direction and a trap
         # > 2 here because we might be moving to a trap room
         if (
             len(next_route) > 2
-            and next_route[0][0] == next_route[1][0]
-            and next_route[1].get("terrain") == "TRAP"
+            and dash_count == 2
+            and next_route[0].get("terrain") == "TRAP"
         ):
-            # self.dash()
-            pass
+            # dash here, trap room ahead eventhough it's an
+            # ineficient dash
+            self.lambda_api.dash(dash_path)
+            return
 
-        # count dashes if possible
+        # check if we're elevated and should fly
+        if roomGraph.get(str(next_room[1])).get("elevation") > 0:
+            self.lambda_api.fly(next_room[1])
+            return
+
+        # otherwise, we move
+        self.lambda_api.move(next_room[0], next_room[1])
