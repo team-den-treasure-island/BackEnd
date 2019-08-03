@@ -7,6 +7,7 @@ urlpatterns = [
     path('room/', views.RoomDetailsView.as_view()),
     path('player/<int:pk>/', views.PlayerDetailsView.as_view()),
     path('player/', views.PlayerDetailsView.as_view()),
+    path('world/', views.GetWorldView.as_view())
 ]
 
 
