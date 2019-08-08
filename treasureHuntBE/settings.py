@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "treasureHunt",
     "rest_framework.authtoken",
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -99,6 +100,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "treasureHuntBE.wsgi.application"
+ASGI_APPLICATION = "treasureHuntBE.routing.application"
+
+CHANNEL_LAYERS={
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 
 # Database

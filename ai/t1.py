@@ -85,11 +85,12 @@ def create_player(name, move_data):
         json={
             "name": name,
             "current_room": move_data["room_id"],
-            "cooldown": move_data["cooldown"]
+            "cooldown": move_data["cooldown"],
         },
         headers=backend_headers,
     )
     return r
+
 
 def update_player(name, move_data):
     response = requests.put(
@@ -97,14 +98,13 @@ def update_player(name, move_data):
         json={
             "name": name,
             "current_room": move_data["room_id"],
-            "cooldown": move_data["cooldown"]
+            "cooldown": move_data["cooldown"],
         },
         headers=backend_headers,
     )
     if response.status_code == 404:
         create_player(name, move_data)
     return response
-
 
 
 def change_name(key, name):
@@ -117,19 +117,15 @@ def change_name(key, name):
 def pretty_print(ugly_json):
     print(json.dumps(ugly_json, indent=4, sort_keys=True))
 
+
 def init(key):
     r = requests.get(f"{ url }/init", headers=headers)
     return r
 
 
 def transmogrify(name):
-    r = requests.post(
-        f"{ url }/transmogrify",
-        json={"name": name},
-        headers=headers,
-    )
+    r = requests.post(f"{ url }/transmogrify", json={"name": name}, headers=headers)
     return r
-
 
 
 def move(key, direction, next_room):
@@ -141,26 +137,25 @@ def move(key, direction, next_room):
     update_player(my_name, r.json())
     return r
 
+
 def pray(key):
-    r = requests.post(
-        f"{ url }/pray",
-        data={},
-        headers=headers,
-    )
+    r = requests.post(f"{ url }/pray", data={}, headers=headers)
     return r
 
+
 def flight(key, direction):
-    r = requests.post(
-        f"{ url }/pray",
-        json={"direction": direction},
-        headers=headers,
-    )
+    r = requests.post(f"{ url }/pray", json={"direction": direction}, headers=headers)
     return r
+
 
 def dash(key, direction, num_rooms, next_room_ids):
     r = requests.post(
         f"{ url }/dash",
-        json={"direction": direction, "num_rooms": num_rooms, "next_room_ids": ",".join(next_room_ids)},
+        json={
+            "direction": direction,
+            "num_rooms": num_rooms,
+            "next_room_ids": ",".join(next_room_ids),
+        },
         headers=headers,
     )
     return r
@@ -181,6 +176,7 @@ def pickup(key, name):
 def get_status(key):
     r = requests.post(f"{ url }/status", data={}, headers=headers)
     return r
+
 
 def drop(key, name):
     r = requests.post(f"{ url }/drop", json={"name": name}, headers=headers)
@@ -432,7 +428,10 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
                     pu_response = pickup(my_key, "small treasure")
                     # print("Pickup Response:")
                     this_json = pu_response.json()
-                    if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
+                    if (
+                        not ignore_weight
+                        and "Item too heavy: +5s CD" in this_json["errors"]
+                    ):
                         player["max_weight"] = True
                         break
                     else:
@@ -445,7 +444,10 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
                     pu_response = pickup(my_key, "tiny treasure")
                     # print("Pickup Response:")
                     this_json = pu_response.json()
-                    if not ignore_weight and "Item too heavy: +5s CD" in this_json["errors"]:
+                    if (
+                        not ignore_weight
+                        and "Item too heavy: +5s CD" in this_json["errors"]
+                    ):
                         player["max_weight"] = True
                         break
                     else:
@@ -465,8 +467,8 @@ def traverse_path(key, player, target_room_id, roomGraph, ignore_weight=None):
         if "Heavily Encumbered: +100% CD" in r.json()["messages"]:
             player["encumbered"] = True
             # break if we're not headed to sell
-            if target_room_id != "0":
-                break
+            # if target_room_id != "0":
+            #     break
 
         if player["current_room"]["room_id"] == target_room_id:
             break
@@ -488,10 +490,11 @@ rjson = None
 
 # if the request fails, sleep the cooldown + half a sec and try again
 while True:
-    r = init(my_key)
-    rjson = r.json()
+    res = init(my_key)
+    breakpoint()
+    rjson = res.json()
     cooldown = rjson["cooldown"]
-    if r.status_code is not 200:
+    if res.status_code is not 200:
         print(f"Init statuscode not 200, waiting {cooldown}")
         time.sleep(cooldown + 0.5)
     else:
@@ -519,9 +522,9 @@ while True:
     if player["max_weight"]:
         # print("top wuh oh")
         # breakpoint()
-        traverse_path(my_key, player, '495', roomGraph)
+        traverse_path(my_key, player, "495", roomGraph)
         breakpoint()
-        go_sell(my_key, player, roomGraph)
+        # go_sell(my_key, player, roomGraph)
     print("**** BEGIN ELEVATION TRAVERSAL (Press Enter)")
     # input()
     print(json.dumps(player["current_room"], indent=4, sort_keys=True))
@@ -544,11 +547,11 @@ while True:
         if player["encumbered"]:
             target_room = "0"
             # move to 1 away from shop
-            traverse_path(my_key, player, target_room, roomGraph)
+            # traverse_path(my_key, player, target_room, roomGraph)
             # move to shope and sell everything
             # print("wuh oh")
             # breakpoint()
-            traverse_path(my_key, player, target_room, roomGraph)
+            traverse_path(my_key, player, "495", roomGraph)
             # go_sell(my_key, player, roomGraph)
             breakpoint()
             player["encumbered"] = False
@@ -657,7 +660,9 @@ while True:
                                     else:
                                         player["max_weight"] = False
                                 while "amazing treasure" in this_json["items"]:
-                                    print(f"amazing Treasure found! {this_json['items']}")
+                                    print(
+                                        f"amazing Treasure found! {this_json['items']}"
+                                    )
                                     print("sleeping cooldown")
                                     time.sleep(this_json["cooldown"])
                                     pu_response = pickup(my_key, "amazing treasure")

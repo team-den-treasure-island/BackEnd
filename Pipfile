@@ -20,6 +20,10 @@ postgres = "*"
 pytz = "*"
 whitenoise = "*"
 graphene = "*"
+channels = "*"
+service-identity = "*"
+asyncio = "*"
+websockets = "*"
 
 [requires]
 python_version = "3.7"

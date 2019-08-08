@@ -3,14 +3,15 @@ import json
 import time
 
 ### LAMBDA BACKEND
-class LambdaApi:
+class TreasureApi:
     def __init__(self, token=None, url=None):
         self.token = token
         self.headers = {
             "content-type": "application/json",
             "Authorization": f"Token {token}",
         }
-        self.url = url
+        self.url = f"{url}/adv"
+        self.mine_url = f"{url}/bc"
         self.cooldown = 0
         self.last_action = time.time()
         self.retries = 2  # number of retries
@@ -137,14 +138,21 @@ class LambdaApi:
 
     def get_balance(self):
         return self.cooldown_request(
-            requests.get, f"{ self.url }/bc/get_balance/", headers=self.headers
+            requests.get, f"{ self.mine_url }/get_balance/", headers=self.headers
         )
 
     def mine(self, proof):
         return self.cooldown_request(
-            requests.get,
-            f"{ self.url }/bc/mine",
+            requests.post,
+            f"{ self.mine_url }/mine/",
             json={"proof": proof},
+            headers=self.headers,
+        )
+
+    def last_proof(self):
+        return self.cooldown_request(
+            requests.get,
+            f"{ self.mine_url }/last_proof/",
             headers=self.headers,
         )
 
